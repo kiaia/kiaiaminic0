@@ -249,7 +249,7 @@ namespace miniplc0 {
 	
 		if(sign==-1)//因为常数在底下 选择用乘法取负数
 			_instructions.emplace_back(Operation::LIT,-1);
-			_instructions.emplace_back(Operation::MUL);
+			_instructions.emplace_back(Operation::MUL,0);
 
 
 
