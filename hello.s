@@ -1,5 +1,0 @@
-LIT 0
-LIT 1
-STO 0
-LOD 0
-WRT
