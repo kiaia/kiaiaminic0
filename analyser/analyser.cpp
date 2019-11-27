@@ -251,14 +251,17 @@ namespace miniplc0 {
 		}
 		if(next.has_value()!=TokenType::UNSIGNED_INTEGER)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrConstantNeedValue);
-		out =stoi(next.value().GetValueString());//为啥getvalue转不了
-		
-		if(out>0xFFFFFFFF)
+		try {
+			out=stoi(next.value().GetValueString());//为啥getvalue转不了
+		}
+		catch (std::out_of_range&) {
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIntegerOverflow);
-	
-		if(sign==-1)//因为常数在底下 选择用乘法取负数
-			_instructions.emplace_back(Operation::LIT,-1);
-			_instructions.emplace_back(Operation::MUL,0);
+		}
+		if (sign == -1)//因为常数在底下 选择用乘法取负数
+		{
+			_instructions.emplace_back(Operation::LIT, -1);
+			_instructions.emplace_back(Operation::MUL, 0);
+		}
 
 
 
@@ -309,7 +312,7 @@ namespace miniplc0 {
 		
 		// <标识符>
 		auto next = nextToken();
-		//convertUninitializedToVariable(next.value());
+		convertUninitializedToVariable(next.value());
 		if (!isDeclared(next.value().GetValueString()))
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNotDeclared);
 		if (isConstant(next.value().GetValueString()))
@@ -435,9 +438,14 @@ namespace miniplc0 {
 			break;//tobeconfirm;
 
 		case UNSIGNED_INTEGER:
-		{int32_t out = stoi(next.value().GetValueString());//为啥getvalue转不了
-		if (out > 0xFFFFFFFF)
+		{try {
+			stoi(next.value().GetValueString());//为啥getvalue转不了
+		}
+		catch (std::out_of_range&) {
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIntegerOverflow);
+		}
+		
+		
 		_instructions.emplace_back(Operation::LIT, stoi(next.value().GetValueString()));
 		break;
 		}

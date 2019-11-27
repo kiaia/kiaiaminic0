@@ -46,7 +46,7 @@ TEST_CASE("Test 1: Assignment") {
 TEST_CASE("Test 2: Declaration") {
 	std::string input =
 		"begin\n"
-		"const abc = 123;\n"
+		"const abc = 000123;\n"
 		"var ABC = 456;\n"
 		"print(abc);\n"
 		"print(ABC);\n"
@@ -68,7 +68,7 @@ TEST_CASE("Test 2: Declaration") {
 
 	miniplc0::VM vm(ins.first);
 	auto result = vm.Run();
-	auto ans = std::vector<std::int32_t>{ 123, 456 };
+	std::vector<std::int32_t> ans = std::vector<std::int32_t>{ 123, 456 };
 	REQUIRE(result == ans);
 }
 
