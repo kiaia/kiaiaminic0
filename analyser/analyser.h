@@ -68,9 +68,11 @@ namespace miniplc0 {
 		// helper function
 		void _add(const Token&, std::map<std::string, int32_t>&);
 		// 添加变量、常量、未初始化的变量
-		void addVariable(const Token&);
+		void addVariable(const Token&);//进行了修改  如果是未声明变量，会
 		void addConstant(const Token&);
 		void addUninitializedVariable(const Token&);
+		//将未初始化变量加入初始化变量
+		void convertUninitializedToVariable(const Token& tk);
 		// 是否被声明过
 		bool isDeclared(const std::string&);
 		// 是否是未初始化的变量

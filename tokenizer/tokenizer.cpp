@@ -69,7 +69,7 @@ namespace miniplc0 {
 				auto ch = current_char.value();
 				// 标记是否读到了不合法的字符，初始化为否
 				auto invalid = false;
-
+				
 				// 使用了自己封装的判断字符类型的函数，定义于 tokenizer/utils.hpp
 				// see https://en.cppreference.com/w/cpp/string/byte/isblank
 				if (miniplc0::isspace(ch)) // 读到的字符是空白字符（空格、换行、制表符等）
@@ -107,10 +107,10 @@ namespace miniplc0 {
 						current_state = DFAState::SEMICOLON_STATE ;
 						break;
 
-					case ')':
+					case '(':
 						current_state = DFAState::LEFTBRACKET_STATE;
 						break;
-					case '(':
+					case ')':
 						current_state = DFAState::RIGHTBRACKET_STATE;
 						break;
 					///// 请填空：
@@ -131,6 +131,7 @@ namespace miniplc0 {
 					// 回退这个字符
 					unreadLast();
 					// 返回编译错误：非法的输入
+					
 					return std::make_pair(std::optional<Token>(), std::make_optional<CompilationError>(pos, ErrorCode::ErrInvalidInput));
 				}
 				// 如果读到的字符导致了状态的转移，说明它是一个token的第一个字符
@@ -145,8 +146,8 @@ namespace miniplc0 {
 				if (!current_char.has_value())
 				{
 					
-					ss >> outnum;
-					return std::make_pair(std::make_optional<Token>(TokenType::UNSIGNED_INTEGER, outnum, pos, currentPos()), std::optional<CompilationError>());
+				
+					return std::make_pair(std::make_optional<Token>(TokenType::UNSIGNED_INTEGER, ss.str(), pos, previousPos()), std::optional<CompilationError>());
 				}
 
 				// 获取读到的字符的值，注意auto推导出的类型是char
@@ -156,15 +157,15 @@ namespace miniplc0 {
 				if (miniplc0::isspace(ch)) // 读到的字符是空白字符（空格、换行、制表符等）
 				{
 					ss >> outnum;
-					return std::make_pair(std::make_optional<Token>(TokenType::UNSIGNED_INTEGER, outnum, pos, currentPos()), std::optional<CompilationError>());
+					return std::make_pair(std::make_optional<Token>(TokenType::UNSIGNED_INTEGER, ss.str(), pos, previousPos()), std::optional<CompilationError>());
 				}// 保留当前状态为初始状态，此处直接break也是可以的
 				else if (!miniplc0::isprint(ch)) // control codes and backspace
 					invalid = true;
-				/*else if (miniplc0::isdigit(ch)) // 读到的字符是数字
+				else if (miniplc0::isdigit(ch)) // 读到的字符是数字
 				{
 					ss << ch;
 					current_state = DFAState::UNSIGNED_INTEGER_STATE; // 切换到无符号整数的状态
-				}*/
+				}
 				else if (miniplc0::isalpha(ch)) // 读到的字符是英文字母
 				{
 					unreadLast();
@@ -175,7 +176,7 @@ namespace miniplc0 {
 				{
 					unreadLast();
 					ss >> outnum;
-					return std::make_pair(std::make_optional<Token>(TokenType::UNSIGNED_INTEGER, outnum, pos, currentPos()), std::optional<CompilationError>());
+					return std::make_pair(std::make_optional<Token>(TokenType::UNSIGNED_INTEGER, ss.str(), pos, currentPos()), std::optional<CompilationError>());
 				}
 
 				// 请填空：
@@ -198,24 +199,30 @@ namespace miniplc0 {
 				if (!current_char.has_value())
 				{// 返回一个空的token，和编译错误ErrEOF：遇到了文件尾
 
-					return std::make_pair(std::make_optional<Token>(TokenType::IDENTIFIER, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					return std::make_pair(std::make_optional<Token>(TokenType::IDENTIFIER, ss.str(), pos, previousPos()), std::optional<CompilationError>());
 				}
 
 				// 获取读到的字符的值，注意auto推导出的类型是char
 				auto ch = current_char.value();
 				// 标记是否读到了不合法的字符，初始化为否
 				auto invalid = false;
+				
 				if (miniplc0::isspace(ch)) // 读到的字符是空白字符（空格、换行、制表符等）
 				{
-					return std::make_pair(std::make_optional<Token>(TokenType::IDENTIFIER, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					if(ss.str()=="begin")return std::make_pair(std::make_optional<Token>(TokenType::BEGIN, ss.str(), pos, previousPos()), std::optional<CompilationError>());
+					if (ss.str() == "end")return std::make_pair(std::make_optional<Token>(TokenType::END, ss.str(), pos, previousPos()), std::optional<CompilationError>());
+					if (ss.str() == "var")return std::make_pair(std::make_optional<Token>(TokenType::VAR, ss.str(), pos, previousPos()), std::optional<CompilationError>());
+					if (ss.str() == "const")return std::make_pair(std::make_optional<Token>(TokenType::CONST, ss.str(), pos, previousPos()), std::optional<CompilationError>());
+					if (ss.str() == "print")return std::make_pair(std::make_optional<Token>(TokenType::PRINT, ss.str(), pos, previousPos()), std::optional<CompilationError>());
+					return std::make_pair(std::make_optional<Token>(TokenType::IDENTIFIER, ss.str(), pos, previousPos()), std::optional<CompilationError>());
 
 				}// 保留当前状态为初始状态，此处直接break也是可以的
 				else if (!miniplc0::isprint(ch)) // control codes and backspace
 					invalid = true;
 				else if (miniplc0::isdigit(ch)) // 读到的字符是数字
 				{
-					unreadLast();
-					current_state = DFAState::UNSIGNED_INTEGER_STATE; // 切换到无符号整数的状态
+					
+					current_state = DFAState::IDENTIFIER_STATE; // 切换到无符号整数的状态
 				}
 				else if (miniplc0::isalpha(ch)) // 读到的字符是英文字母
 				{
@@ -224,7 +231,14 @@ namespace miniplc0 {
 				}
 				else
 				{
+
 					unreadLast();
+
+					if (ss.str() == "begin")return std::make_pair(std::make_optional<Token>(TokenType::BEGIN, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					if (ss.str() == "end")return std::make_pair(std::make_optional<Token>(TokenType::END, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					if (ss.str() == "var")return std::make_pair(std::make_optional<Token>(TokenType::VAR, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					if (ss.str() == "const")return std::make_pair(std::make_optional<Token>(TokenType::CONST, ss.str(), pos, currentPos()), std::optional<CompilationError>());
+					if (ss.str() == "print")return std::make_pair(std::make_optional<Token>(TokenType::PRINT, ss.str(), pos, currentPos()), std::optional<CompilationError>());
 					return std::make_pair(std::make_optional<Token>(TokenType::IDENTIFIER, ss.str(), pos, currentPos()), std::optional<CompilationError>());
 				}
 				break;

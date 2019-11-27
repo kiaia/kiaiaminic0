@@ -142,6 +142,7 @@ namespace miniplc0 {
 
 			// 预读？
 			auto next = nextToken();
+			
 			if (!next.has_value())
 				return {};
 			// 'var'
@@ -155,30 +156,29 @@ namespace miniplc0 {
 				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNeedIdentifier);
 			if (isDeclared(next.value().GetValueString()))
 				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrDuplicateDeclaration);
-			addVariable(next.value());
+			auto tokenname=next;
+			addUninitializedVariable(next.value());
 			// 变量可能没有初始化，仍然需要一次预读
-			auto next2 = nextToken();
-			if (!next2.has_value())
-				return {};
-			// 'var'
-			if (next2.value().GetType() != TokenType::VAR) {
-				unreadToken();
-				return {};
-			}
-			// '='
 			next = nextToken();
-			if (!next.has_value() || next.value().GetType() != TokenType::EQUAL_SIGN)
-				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrConstantNeedValue);
-			// '<表达式>'
-			
-			auto err = analyseExpression();
-			if (err.has_value())
-				return err;
-			// ';'
-			next = nextToken();
-			if (!next.has_value() || next.value().GetType() != TokenType::SEMICOLON)
-				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNoSemicolon);
+			if (!next.has_value())
+				return {};
 			_instructions.emplace_back(Operation::LIT, 0);
+			// '='
+			if (next.value().GetType() == TokenType::EQUAL_SIGN)
+			{
+
+				auto err = analyseExpression();
+				if (err.has_value())
+					return err;
+				convertUninitializedToVariable(tokenname.value());
+				_instructions.emplace_back(Operation::STO, getIndex(tokenname.value().GetValueString()));
+				next = nextToken();
+			}
+			// ';'
+			
+			if ( next.value().GetType() != TokenType::SEMICOLON)
+				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNoSemicolon);
+			
 		}
 		return {};
 	}
@@ -199,19 +199,28 @@ namespace miniplc0 {
 			if (next.value().GetType() != TokenType::IDENTIFIER &&
 				next.value().GetType() != TokenType::PRINT &&
 				next.value().GetType() != TokenType::SEMICOLON) {
+				unreadToken();
 				return {};
 			}
 			std::optional<CompilationError> err;
 			switch (next.value().GetType()) {
-			
+
 			case IDENTIFIER:
+			{
 				unreadToken();
-				analyseAssignmentStatement();
+				auto err = analyseAssignmentStatement();
+				if (err.has_value())
+					return err;
+
 				break;
+			}
 			case PRINT:
-				unreadToken();
-				analyseOutputStatement();
-				break;
+			{unreadToken();
+			auto err =analyseOutputStatement();
+			if (err.has_value())
+				return err;
+			break;
+			}
 			case SEMICOLON:
 				return{};
 				
@@ -300,16 +309,22 @@ namespace miniplc0 {
 		
 		// <标识符>
 		auto next = nextToken();
+		convertUninitializedToVariable(next.value());
 		if (!isDeclared(next.value().GetValueString()))
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNotDeclared);
 		if (isConstant(next.value().GetValueString()))
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrAssignToConstant);
 		auto next2 = nextToken();
-		if(next.value().GetType() != TokenType::EQUAL_SIGN)
+		if(next2.value().GetType() != TokenType::EQUAL_SIGN)
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
 		auto err = analyseExpression();
 		if (err.has_value())
 			return err;
+		next2 = nextToken();
+		if (!next2.has_value() || next2.value().GetType() != TokenType::SEMICOLON)
+			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNoSemicolon);
+
+
 		_instructions.emplace_back(Operation::STO, getIndex(next.value().GetValueString()));
 
 
@@ -399,7 +414,7 @@ namespace miniplc0 {
 		else if (next.value().GetType() == TokenType::MINUS_SIGN) {
 			prefix = -1;
 			_instructions.emplace_back(Operation::LIT, 0);
-		}\
+		}
 		else
 			unreadToken();
 
@@ -409,6 +424,13 @@ namespace miniplc0 {
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIncompleteExpression);
 		switch (next.value().GetType()) {
 		case IDENTIFIER:
+			if (!isDeclared(next.value().GetValueString()))
+				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNotDeclared);
+					
+			if(isUninitializedVariable(next.value().GetValueString()))
+				return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNotInitialized);
+
+
 			_instructions.emplace_back(Operation::LOD, getIndex(next.value().GetValueString()));
 			break;//tobeconfirm;
 
@@ -462,8 +484,21 @@ namespace miniplc0 {
 	}
 
 	void Analyser::addVariable(const Token& tk) {
+		
 		_add(tk, _vars);
 	}
+	void Analyser::convertUninitializedToVariable(const Token& tk) {
+		int32_t stackposition;
+		if (_uninitialized_vars.find(tk.GetValueString()) != _uninitialized_vars.end())
+		{
+			stackposition = _uninitialized_vars[tk.GetValueString()];
+			_uninitialized_vars.erase(tk.GetValueString());
+			_vars[tk.GetValueString()] = stackposition;
+		}
+
+		
+	}
+		
 
 	void Analyser::addConstant(const Token& tk) {
 		_add(tk, _consts);
