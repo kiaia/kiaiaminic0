@@ -309,7 +309,7 @@ namespace miniplc0 {
 		
 		// <标识符>
 		auto next = nextToken();
-		convertUninitializedToVariable(next.value());
+		//convertUninitializedToVariable(next.value());
 		if (!isDeclared(next.value().GetValueString()))
 			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrNotDeclared);
 		if (isConstant(next.value().GetValueString()))
@@ -435,8 +435,12 @@ namespace miniplc0 {
 			break;//tobeconfirm;
 
 		case UNSIGNED_INTEGER:
-			_instructions.emplace_back(Operation::LIT, stoi(next.value().GetValueString()));
-			break;
+		{int32_t out = stoi(next.value().GetValueString());//为啥getvalue转不了
+		if (out > 0xFFFFFFFF)
+			return std::make_optional<CompilationError>(_current_pos, ErrorCode::ErrIntegerOverflow);
+		_instructions.emplace_back(Operation::LIT, stoi(next.value().GetValueString()));
+		break;
+		}
 
 		case LEFT_BRACKET:
 			

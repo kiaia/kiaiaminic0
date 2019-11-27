@@ -221,7 +221,7 @@ namespace miniplc0 {
 					invalid = true;
 				else if (miniplc0::isdigit(ch)) // 读到的字符是数字
 				{
-					
+					ss << ch;
 					current_state = DFAState::IDENTIFIER_STATE; // 切换到无符号整数的状态
 				}
 				else if (miniplc0::isalpha(ch)) // 读到的字符是英文字母
