@@ -1,6 +1,7 @@
 #include "tokenizer/tokenizer.h"
 #include <cctype>
 #include <sstream>
+#include<cstring>
 #include<optional>
 
 namespace miniplc0 {
