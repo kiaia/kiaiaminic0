@@ -22,15 +22,30 @@ namespace miniplc0 {
 		enum DFAState {
 			INITIAL_STATE,
 			UNSIGNED_INTEGER_STATE,
+			ZERO_STATE,
+			HEX_STATE,
 			PLUS_SIGN_STATE,
 			MINUS_SIGN_STATE,
 			DIVISION_SIGN_STATE,
 			MULTIPLICATION_SIGN_STATE,
 			IDENTIFIER_STATE,
+			RESERVED_STATE,
 			EQUAL_SIGN_STATE,
 			SEMICOLON_STATE,
 			LEFTBRACKET_STATE,
-			RIGHTBRACKET_STATE
+			RIGHTBRACKET_STATE,
+			LEFTCURLY_STATE,
+			RIGHTCURLY_STATE,
+			MORE_STATE,
+			LESS_STATE,
+			EQUAL_STATE,//等号
+			NOEQUAL_STATE,
+			COMMA_STATE,//逗号
+			COLON_STATE,//冒号
+			SINGLE_STATE,//单引号
+			DOUBLE_STATE//双引号
+
+
 		};
 	public:
 		Tokenizer(std::istream& ifs)
@@ -38,6 +53,9 @@ namespace miniplc0 {
 		Tokenizer(Tokenizer&& tkz) = delete;
 		Tokenizer(const Tokenizer&) = delete;
 		Tokenizer& operator=(const Tokenizer&) = delete;
+		int32_t hexToDec(char* source);
+		int32_t getIndexOfSigns(char ch);
+
 
 		// 核心函数，返回下一个 token
 		std::pair<std::optional<Token>, std::optional<CompilationError>> NextToken();

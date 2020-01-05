@@ -18,6 +18,15 @@ namespace miniplc0 {
 
 	// To keep it simple, we don't create an error system.
 	enum ErrorCode { 
+		ErrNeedRightBracket,
+		ErrNoFunciton,
+		ErrNeedReturnValue,
+		ErrVoid,
+		ErrNeedRightCurly,
+		ErrNeedLeftCurly,
+		ErrNeedLeftBracket,
+		ErrType,
+		ErrNoType,
 		ErrNoError, // Should be only used internally.
 		ErrStreamError, 
 		ErrEOF,

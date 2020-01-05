@@ -9,6 +9,13 @@
 namespace miniplc0 {
 
 	enum TokenType {
+		CHAR,
+		STRING,
+		ELSE,
+		IF,
+		WHILE,
+		RETURN,
+		SCAN,
 		NULL_TOKEN, // 仅仅为了内部实现方便，不应该出现在分析过程
 		UNSIGNED_INTEGER, // 无符号整数
 		IDENTIFIER, // 标识符
@@ -24,7 +31,21 @@ namespace miniplc0 {
 		EQUAL_SIGN, // 符号 =
 		SEMICOLON, // 符号 ;
 		LEFT_BRACKET, // 符号 (
-		RIGHT_BRACKET // 符号 )
+		RIGHT_BRACKET, // 符号 )
+		EQUAL,//等于
+		NOEUQAL,//
+		COMMA,
+		LEFT_QURLY,
+		RIGHT_QURLY,
+		MORE,
+		LESS,
+		MOREEQUAL,
+		LESSEQUAL,
+		COLON,//冒号
+		SINGLE,//单引号
+		DOUBLE,//双引号
+		HEX_INTERGER,
+		TYPE//dingyi
 	};
 
 	class Token final {
